@@ -4,18 +4,18 @@ import * as moment from 'moment-timezone'
 @Injectable()
 export class CoinsService {
     async getTickers(): Promise<Array<string>> {
-        const response = await axios.get('https://api.upbit.com/v1/market/all?isDetails=false')
-        const krwFiltered = response.data.filter(coin => coin?.market?.indexOf('KRW') > -1).map(coin => coin?.market)
+        const response: any = await axios.get('https://api.upbit.com/v1/market/all?isDetails=false')
+        const krwFiltered = response?.data?.filter(coin => coin?.market?.indexOf('KRW') > -1)?.map(coin => coin?.market)
         return krwFiltered
       }
     async getBand(ticker: string): Promise<Array<number>> {
-        const response = await axios.get('https://api.upbit.com/v1/candles/days', {
+        const response: any = await axios.get('https://api.upbit.com/v1/candles/days', {
           params: {
             market: ticker,
             count: 20
           }
         })
-        const dataList = response.data.map(data => data.trade_price)
+        const dataList: Array<any> = response.data.map(data => data.trade_price)
         const price20: number = this.getMedian(dataList)
         const ubb: number = price20 + (this.getStandardDeviation(dataList) * 2)
         const lbb: number = price20 - (this.getStandardDeviation(dataList) * 2)
@@ -27,32 +27,32 @@ export class CoinsService {
         // bw = 밴드폭 (Bandwidth) = (상한선 – 하한선) / 중심선 = (ubb - lbb) / mbb
     }
     async getUbbOutTickers(): Promise<Array<object>> {
-        const tickers = await this.getTickers()
-        const response = await axios.get('https://api.upbit.com/v1/ticker', {
+        const tickers: Array<any> = await this.getTickers()
+        const response: any = await axios.get('https://api.upbit.com/v1/ticker', {
             params: {
               markets: tickers.join(', ')
             }
         })
-        const priceList = response.data.map(data => {
+        const priceList: Array<any> = response.data.map(data => {
             return {
                 market: data.market, 
                 trade_price: data.trade_price
             }
         })
         // console.log('length : ', priceList.length)
-        const timerTen = () => {
+        const timerTen: Function = () => {
             return new Promise<Array<object>>(resolve => {
-                let turn = 0
+                let turn: number = 0
                 let tmpList: Array<object> = []
-                const timer = setInterval(async () => {
+                const timer: NodeJS.Timer = setInterval(async () => {
                     // console.log(`${turn}---------------------------------------`)
                     for (let i = turn * 10; i < (turn + 1) * 10; i++) {
                         if (!priceList[i]) {
                             break
                         }
-                        const crntPrice = priceList[i].trade_price
+                        const crntPrice: number = priceList[i].trade_price
                         if (crntPrice && crntPrice !== undefined && crntPrice !== 0) {
-                            const tickerBand = await this.getBand(priceList[i].market)
+                            const tickerBand: Array<any> = await this.getBand(priceList[i].market)
                             // console.log(crntPrice)
                             // console.log(tickerBand)
                             if (crntPrice > tickerBand[1]) {
@@ -74,32 +74,32 @@ export class CoinsService {
         return ubbOutList
     }
     async getLbbOutTickers(): Promise<Array<object>> {
-        const tickers = await this.getTickers()
-        const response = await axios.get('https://api.upbit.com/v1/ticker', {
+        const tickers: Array<any> = await this.getTickers()
+        const response: any = await axios.get('https://api.upbit.com/v1/ticker', {
             params: {
               markets: tickers.join(', ')
             }
         })
-        const priceList = response.data.map(data => {
+        const priceList: Array<any> = response.data.map(data => {
             return {
                 market: data.market, 
                 trade_price: data.trade_price
             }
         })
         // console.log('length : ', priceList.length)
-        const timerTen = () => {
+        const timerTen: Function = () => {
             return new Promise<Array<object>>(resolve => {
-                let turn = 0
+                let turn: number = 0
                 let tmpList: Array<object> = []
-                const timer = setInterval(async () => {
+                const timer: NodeJS.Timer = setInterval(async () => {
                     // console.log(`${turn}---------------------------------------`)
                     for (let i = turn * 10; i < (turn + 1) * 10; i++) {
                         if (!priceList[i]) {
                             break
                         }
-                        const crntPrice = priceList[i].trade_price
+                        const crntPrice: number = priceList[i].trade_price
                         if (crntPrice && crntPrice !== undefined && crntPrice !== 0) {
-                            const tickerBand = await this.getBand(priceList[i].market)
+                            const tickerBand: Array<any> = await this.getBand(priceList[i].market)
                             // console.log(crntPrice)
                             // console.log(tickerBand)
                             if (crntPrice < tickerBand[2]) {
@@ -120,19 +120,19 @@ export class CoinsService {
         console.log('LowerOut: ', lbbOutList)
         return lbbOutList
     }
-    getMedian (array): number {
+    getMedian (array: Array<any>): number {
         if (!array || array.length === 0) { return 0 }
-        const n = array.length
-        let sum = 0
+        const n: number = array.length
+        let sum: number = 0
         for (let data of array) {
           sum += data
         }
         return sum / n
     }
-    getStandardDeviation (array): number {
+    getStandardDeviation (array: Array<any>): number {
         if (!array || array.length === 0) { return 0 }
-        const n = array.length
-        const mean = array.reduce((a, b) => a + b) / n
+        const n: number = array.length
+        const mean: number = array.reduce((a, b) => a + b) / n
         return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
     }
     makeMessageTemplate (array: Array<any>, isUbb: boolean): string {
