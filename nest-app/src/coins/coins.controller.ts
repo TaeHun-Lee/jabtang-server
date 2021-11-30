@@ -27,7 +27,7 @@ export class CoinsController {
 		clearInterval(this.timer)
 		this.timer = null
 	}
-	@Get('/ ')
+	@Get('/sendAllMyKakaoMessage')
 	async sendAllMyKakaoMessage(): Promise<void> {
 		this.timer = setInterval(async () => {
 			await this.sendUbbsMyKaKaoMessage()
