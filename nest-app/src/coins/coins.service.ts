@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import { AxiosRequestHeaders } from '@nestjs/common/node_modules/axios'
 import axios from 'axios'
 import * as moment from 'moment-timezone'
+
 @Injectable()
 export class CoinsService {
+    kakaoAccessKey: string = '4vkEqpy_2EAOyn_bNdAkGjh2KzIsEmT-wV2bjgopb7gAAAF9cPtycw'
     async getTickers(): Promise<Array<string>> {
         const response: any = await axios.get('https://api.upbit.com/v1/market/all?isDetails=false')
         const krwFiltered = response?.data?.filter(coin => coin?.market?.indexOf('KRW') > -1)?.map(coin => coin?.market)
@@ -166,5 +169,24 @@ export class CoinsService {
             msg += 'NO LBB OUT COIN'
         }
         return msg
+    }
+    makeKakaoHeader (): AxiosRequestHeaders {
+        const headers: AxiosRequestHeaders = {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			Authorization: `Bearer ${this.kakaoAccessKey}`
+        }
+        return headers
+    }
+    makeKakaoMessage (textMsg: string): Object {
+		const msgTemplate: object = {
+			"object_type": "text",
+			"text": textMsg,
+			"link": {
+				"web_url": "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC",
+				"mobile_web_url": "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"
+			},
+			"button_title": "바로 확인"
+		}
+        return msgTemplate
     }
 }

@@ -6,7 +6,10 @@ import axios from 'axios'
 
 @Controller('coins')
 export class CoinsController {
-    constructor(private readonly coinService: CoinsService) {}
+	timer: NodeJS.Timer
+    constructor(private readonly coinService: CoinsService) {
+		this.timer = null
+	}
     @Get('/tickers')
     async getTickers(): Promise<any> {
 		return await this.coinService.getTickers()
@@ -19,30 +22,25 @@ export class CoinsController {
     async getLbbOutTickers(): Promise<Array<object>> {
 		return this.coinService.getLbbOutTickers()
     }
+	@Get('/clearTimer')
+	clearTimer(): void {
+		clearInterval(this.timer)
+		this.timer = null
+	}
 	@Get('/sendAllMyKakaoMessage')
-	async sendAllMyKakaoMessage(): Promise<Array<Array<object>>> {
-		const ubbs: Array<object> = await this.sendUbbsMyKaKaoMessage()
-		const lbbs: Array<object> = await this.sendLbbsMyKaKaoMessage()
-		return [ubbs, lbbs]
+	async sendAllMyKakaoMessage(): Promise<void> {
+		this.timer = setInterval(async () => {
+			await this.sendUbbsMyKaKaoMessage()
+			await this.sendLbbsMyKaKaoMessage()
+		}, 1000 * 60 * 10)
 	}
     @Get('/sendUbbsMyKaKaoMessage')
     async sendUbbsMyKaKaoMessage(): Promise<Array<object>> {
-		const ubbsList: Array<object> = await this.coinService.getUbbOutTickers()
+		const ubbsList: Array<Object> = await this.coinService.getUbbOutTickers()
 		const textMsg: string = this.coinService.makeMessageTemplate(ubbsList, true)
-		const headers: AxiosRequestHeaders = {
-			'Content-Type': 'application/x-www-form-urlencoded',
-			Authorization: 'Bearer gJd4riFKUQs21DzEKztHPrn8zH22SX5niFT2hgo9dVwAAAF9bQrm8A'
-		}
+		const headers: AxiosRequestHeaders = this.coinService.makeKakaoHeader()
 		const params: URLSearchParams = new URLSearchParams()
-		const msgTemplate: object = {
-			"object_type": "text",
-			"text": textMsg,
-			"link": {
-				"web_url": "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC",
-				"mobile_web_url": "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"
-			},
-			"button_title": "바로 확인"
-		}
+		const msgTemplate: Object = this.coinService.makeKakaoMessage(textMsg)
 		params.append('template_object', JSON.stringify(msgTemplate))
 		axios.post('https://kapi.kakao.com/v2/api/talk/memo/default/send', params, { headers })
 			.catch(err => console.log(err))
@@ -52,20 +50,9 @@ export class CoinsController {
     async sendLbbsMyKaKaoMessage(): Promise<Array<object>> {
 		const lbbsList: Array<object> = await this.coinService.getLbbOutTickers()
 		const textMsg: string = this.coinService.makeMessageTemplate(lbbsList, false)
-		const headers: AxiosRequestHeaders = {
-		  'Content-Type': 'application/x-www-form-urlencoded',
-		  Authorization: 'Bearer gJd4riFKUQs21DzEKztHPrn8zH22SX5niFT2hgo9dVwAAAF9bQrm8A'
-		}
+		const headers: AxiosRequestHeaders = this.coinService.makeKakaoHeader()
 		const params: URLSearchParams = new URLSearchParams()
-		const msgTemplate: object = {
-		  "object_type": "text",
-		  "text": textMsg,
-		  "link": {
-			  "web_url": "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC",
-			  "mobile_web_url": "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"
-		  },
-		  "button_title": "바로 확인"
-		}
+		const msgTemplate: Object = this.coinService.makeKakaoMessage(textMsg)
 		params.append('template_object', JSON.stringify(msgTemplate))
 		axios.post('https://kapi.kakao.com/v2/api/talk/memo/default/send', params, { headers })
 			.catch(err => console.log(err))
