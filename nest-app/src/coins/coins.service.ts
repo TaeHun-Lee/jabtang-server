@@ -5,7 +5,7 @@ import * as moment from 'moment-timezone'
 
 @Injectable()
 export class CoinsService {
-    kakaoAccessKey: string = '4vkEqpy_2EAOyn_bNdAkGjh2KzIsEmT-wV2bjgopb7gAAAF9cPtycw'
+    kakaoAccessKey: string = 'QvMBw3YuXRtW_6KucxnTU7lpX1mr1TQ2g0bYzgo9c-sAAAF9hn4iwQ'
     async getTickers(): Promise<Array<string>> {
         const response: any = await axios.get('https://api.upbit.com/v1/market/all?isDetails=false')
         const krwFiltered = response?.data?.filter(coin => coin?.market?.indexOf('KRW') > -1)?.map(coin => coin?.market)
@@ -29,7 +29,7 @@ export class CoinsService {
         // perb = %b = (주가 – 하한선) / (상한선 – 하한선) = (close - lbb) / (ubb - lbb)
         // bw = 밴드폭 (Bandwidth) = (상한선 – 하한선) / 중심선 = (ubb - lbb) / mbb
     }
-    async getUbbOutTickers(): Promise<Array<object>> {
+    async getUbbOutTickers(): Promise<Array<any>> {
         const tickers: Array<any> = await this.getTickers()
         const response: any = await axios.get('https://api.upbit.com/v1/ticker', {
             params: {
@@ -44,9 +44,9 @@ export class CoinsService {
         })
         // console.log('length : ', priceList.length)
         const timerTen: Function = () => {
-            return new Promise<Array<object>>(resolve => {
+            return new Promise<Array<any>>(resolve => {
                 let turn: number = 0
-                let tmpList: Array<object> = []
+                let tmpList: Array<any> = []
                 const timer: NodeJS.Timer = setInterval(async () => {
                     // console.log(`${turn}---------------------------------------`)
                     for (let i = turn * 10; i < (turn + 1) * 10; i++) {
@@ -72,11 +72,11 @@ export class CoinsService {
                 }, 1500)
             })
         }
-        const ubbOutList: Array<object> = await timerTen()
-        console.log('UpperOut: ', ubbOutList)
+        const ubbOutList: Array<any> = await timerTen()
+        // console.log('UpperOut: ', ubbOutList)
         return ubbOutList
     }
-    async getLbbOutTickers(): Promise<Array<object>> {
+    async getLbbOutTickers(): Promise<Array<any>> {
         const tickers: Array<any> = await this.getTickers()
         const response: any = await axios.get('https://api.upbit.com/v1/ticker', {
             params: {
@@ -91,9 +91,9 @@ export class CoinsService {
         })
         // console.log('length : ', priceList.length)
         const timerTen: Function = () => {
-            return new Promise<Array<object>>(resolve => {
+            return new Promise<Array<any>>(resolve => {
                 let turn: number = 0
-                let tmpList: Array<object> = []
+                let tmpList: Array<any> = []
                 const timer: NodeJS.Timer = setInterval(async () => {
                     // console.log(`${turn}---------------------------------------`)
                     for (let i = turn * 10; i < (turn + 1) * 10; i++) {
@@ -119,9 +119,45 @@ export class CoinsService {
                 }, 1500)
             })
         }
-        const lbbOutList: Array<object> = await timerTen()
-        console.log('LowerOut: ', lbbOutList)
+        const lbbOutList: Array<any> = await timerTen()
+        // console.log('LowerOut: ', lbbOutList)
         return lbbOutList
+    }
+    async getUbbOutTickersMostFive (): Promise<Array<any>> {
+        const ubbList: Array<any> = await this.getUbbOutTickers()
+        let ubbSortedList: Array<any> = []
+        if (ubbList.length > 0) {
+            ubbSortedList = ubbList.sort((a, b) => {
+                if ((a.trade_price - a.ubb) > (b.trade_price - b.ubb)) {
+                    return 1
+                } else if ((a.trade_price - a.ubb) > (b.trade_price - b.ubb)) {
+                    return -1
+                } else {
+                    return 0
+                }
+            })
+        }
+        ubbSortedList = ubbSortedList.slice(0, 5)
+        console.log('UpperOutFive: ', ubbSortedList)
+        return ubbSortedList
+    }
+    async getLbbOutTickersMostFive (): Promise<Array<any>> {
+        const lbbList: Array<any> = await this.getLbbOutTickers()
+        let lbbSortedList: Array<any> = []
+        if (lbbList.length > 0) {
+            lbbSortedList = lbbList.sort((a, b) => {
+                if ((a.lbb - a.trade_price) > (b.lbb - b.trade_price)) {
+                    return 1
+                } else if ((a.lbb - a.trade_price) > (b.lbb - b.trade_price)) {
+                    return -1
+                } else {
+                    return 0
+                }
+            })
+        }
+        lbbSortedList = lbbSortedList.slice(0, 5)
+        console.log('LowerOutFive: ', lbbSortedList)
+        return lbbSortedList
     }
     getMedian (array: Array<any>): number {
         if (!array || array.length === 0) { return 0 }
@@ -177,8 +213,8 @@ export class CoinsService {
         }
         return headers
     }
-    makeKakaoMessage (textMsg: string): Object {
-		const msgTemplate: object = {
+    makeKakaoMessage (textMsg: string): any {
+		const msgTemplate: any = {
 			"object_type": "text",
 			"text": textMsg,
 			"link": {

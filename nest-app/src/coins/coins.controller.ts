@@ -15,11 +15,11 @@ export class CoinsController {
 		return await this.coinService.getTickers()
     }
     @Get('/getUbbOutTickers')
-    async getBandOutTicker(): Promise<Array<object>> {
+    async getBandOutTicker(): Promise<Array<any>> {
 		return this.coinService.getUbbOutTickers()
     }
     @Get('/getLbbOutTickers')
-    async getLbbOutTickers(): Promise<Array<object>> {
+    async getLbbOutTickers(): Promise<Array<any>> {
 		return this.coinService.getLbbOutTickers()
     }
 	@Get('/clearTimer')
@@ -34,25 +34,56 @@ export class CoinsController {
 			await this.sendLbbsMyKaKaoMessage()
 		}, 1000 * 60 * 10)
 	}
-    @Get('/sendUbbsMyKaKaoMessage')
-    async sendUbbsMyKaKaoMessage(): Promise<Array<object>> {
-		const ubbsList: Array<Object> = await this.coinService.getUbbOutTickers()
+	@Get('/sendAllFiveMyKakaoMessage')
+	async sendAllFiveMyKakaoMessage(): Promise<void> {
+		this.timer = setInterval(async () => {
+			await this.sendUbbOutTickersMostFive()
+			await this.sendLbbOutTickersMostFive()
+		}, 1000 * 60 * 10)
+	}
+	@Get('/sendUbbOutTickersMostFive')
+	async sendUbbOutTickersMostFive() {
+		const ubbsList: Array<any> = await this.coinService.getUbbOutTickersMostFive()
 		const textMsg: string = this.coinService.makeMessageTemplate(ubbsList, true)
 		const headers: AxiosRequestHeaders = this.coinService.makeKakaoHeader()
 		const params: URLSearchParams = new URLSearchParams()
-		const msgTemplate: Object = this.coinService.makeKakaoMessage(textMsg)
+		const msgTemplate: any = this.coinService.makeKakaoMessage(textMsg)
+		params.append('template_object', JSON.stringify(msgTemplate))
+		axios.post('https://kapi.kakao.com/v2/api/talk/memo/default/send', params, { headers })
+			.catch(err => console.log(err))
+		return ubbsList
+	}
+	@Get('/sendLbbOutTickersMostFive')
+	async sendLbbOutTickersMostFive() {
+		const lbbsList: Array<any> = await this.coinService.getLbbOutTickersMostFive()
+		const textMsg: string = this.coinService.makeMessageTemplate(lbbsList, false)
+		const headers: AxiosRequestHeaders = this.coinService.makeKakaoHeader()
+		const params: URLSearchParams = new URLSearchParams()
+		const msgTemplate: any = this.coinService.makeKakaoMessage(textMsg)
+		params.append('template_object', JSON.stringify(msgTemplate))
+		axios.post('https://kapi.kakao.com/v2/api/talk/memo/default/send', params, { headers })
+			.catch(err => console.log(err))
+		return lbbsList
+	}
+    @Get('/sendUbbsMyKaKaoMessage')
+    async sendUbbsMyKaKaoMessage(): Promise<Array<any>> {
+		const ubbsList: Array<any> = await this.coinService.getUbbOutTickers()
+		const textMsg: string = this.coinService.makeMessageTemplate(ubbsList, true)
+		const headers: AxiosRequestHeaders = this.coinService.makeKakaoHeader()
+		const params: URLSearchParams = new URLSearchParams()
+		const msgTemplate: any = this.coinService.makeKakaoMessage(textMsg)
 		params.append('template_object', JSON.stringify(msgTemplate))
 		axios.post('https://kapi.kakao.com/v2/api/talk/memo/default/send', params, { headers })
 			.catch(err => console.log(err))
 		return ubbsList
     }
     @Get('/sendLbbsMyKaKaoMessage')
-    async sendLbbsMyKaKaoMessage(): Promise<Array<object>> {
-		const lbbsList: Array<object> = await this.coinService.getLbbOutTickers()
+    async sendLbbsMyKaKaoMessage(): Promise<Array<any>> {
+		const lbbsList: Array<any> = await this.coinService.getLbbOutTickers()
 		const textMsg: string = this.coinService.makeMessageTemplate(lbbsList, false)
 		const headers: AxiosRequestHeaders = this.coinService.makeKakaoHeader()
 		const params: URLSearchParams = new URLSearchParams()
-		const msgTemplate: Object = this.coinService.makeKakaoMessage(textMsg)
+		const msgTemplate: any = this.coinService.makeKakaoMessage(textMsg)
 		params.append('template_object', JSON.stringify(msgTemplate))
 		axios.post('https://kapi.kakao.com/v2/api/talk/memo/default/send', params, { headers })
 			.catch(err => console.log(err))
